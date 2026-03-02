@@ -105,9 +105,9 @@ If you're receiving spam despite the honeypot and rate limiting, add [Cloudflare
 3. Add the secret key: `wrangler secret put TURNSTILE_SECRET`
 4. Validate the token in `handleRequest()` before processing
 
-### Restrict Telegram Bot to Your Account
+### Restrict Telegram Bot to Direct Messages Only
 
-In BotFather, you can disable group privacy mode and ensure the bot only responds to DMs from your account — though InvitArr's `CHAT_ID` check already enforces this at the application level.
+You can prevent the bot from being added to group chats entirely: message @BotFather → select your bot → *Bot Settings* → *Allow Groups* → *Turn off*. This is optional — InvitArr's `CHAT_ID` check already ensures only you can approve requests even if the bot ends up in a group.
 
 ---
 

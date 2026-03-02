@@ -1728,6 +1728,10 @@
                                 <input type="text" id="requestName" class="form-input" placeholder="Your Name" required style="padding: 0.75rem 1rem;">
                                 <input type="email" id="requestEmail" class="form-input" placeholder="Your Email" required style="padding: 0.75rem 1rem;">
                             </div>
+                            <!-- Honeypot — hidden from humans, bots fill it automatically -->
+                            <div style="display:none" aria-hidden="true">
+                                <input type="text" id="requestWebsite" name="website" tabindex="-1" autocomplete="off">
+                            </div>
                             <button type="submit" class="btn btn-primary" style="align-self: flex-start;">
                                 📨 Request Invite
                             </button>
@@ -3510,10 +3514,11 @@
             statusDiv.style.display = 'none';
             
             try {
+                const website = document.getElementById('requestWebsite')?.value || '';
                 const response = await fetch(SITE_CONFIG.workerUrl + '/request', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email })
+                    body: JSON.stringify({ name, email, website })
                 });
                 
                 if (response.ok) {
@@ -3526,7 +3531,7 @@
                     throw new Error('Server error');
                 }
             } catch (error) {
-                statusDiv.innerHTML = '❌ <strong>Something went wrong.</strong> Please try again or contact me directly.';
+                statusDiv.innerHTML = '❌ <strong>Something went wrong.</strong> Please try again or ask whoever invited you.';
                 statusDiv.style.color = '#dc3545';
                 statusDiv.style.display = 'block';
                 trackEvent('plex_invite_error', { error: error.message });

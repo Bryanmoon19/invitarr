@@ -23,11 +23,23 @@
  *                     e.g. "https://plex.example.com" (default: * for dev)
  */
 
+// ── HTML helpers ──────────────────────────────────────────────────────────────
+
+/** Escape a string for safe insertion into HTML attribute or text content. */
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g,  '&amp;')
+        .replace(/</g,  '&lt;')
+        .replace(/>/g,  '&gt;')
+        .replace(/"/g,  '&quot;')
+        .replace(/'/g,  '&#39;');
+}
+
 // ── HTML request form ─────────────────────────────────────────────────────────
 
 function buildHtmlPage(env) {
-    const ownerName  = env.OWNER_NAME  || 'your host';
-    const serverName = env.SERVER_NAME || 'Media Server';
+    const ownerName  = escapeHtml(env.OWNER_NAME  || 'your host');
+    const serverName = escapeHtml(env.SERVER_NAME || 'Media Server');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -273,10 +285,12 @@ function getCorsHeaders(env, request) {
 // ── Security: owner-only callback validation ──────────────────────────────────
 
 function isAuthorizedOwner(cb, env) {
+    // Only check from.id — the Telegram user who tapped the button.
+    // Do not fall back to message.chat.id: in direct messages both are the
+    // same, but in group chats chat.id is the group ID, not the user's ID.
     const allowedChatId = String(env.CHAT_ID);
-    const fromId  = String(cb.from?.id  || '');
-    const chatId  = String(cb.message?.chat?.id || '');
-    return fromId === allowedChatId || chatId === allowedChatId;
+    const fromId = String(cb.from?.id || '');
+    return fromId === allowedChatId;
 }
 
 // ── Input validation ──────────────────────────────────────────────────────────

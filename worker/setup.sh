@@ -70,11 +70,14 @@ prompt_secret() {
     echo "$SECRET_VALUE" | wrangler secret put "$name"
     echo -e "  ${GREEN}✓ $name saved${NC}"
     echo ""
+    # Export to calling scope so callers can capture specific secrets
+    LAST_SECRET_VALUE="$SECRET_VALUE"
 }
 
 prompt_secret "BOT_TOKEN" \
     "Telegram bot token from @BotFather" \
     "Message @BotFather on Telegram → /newbot → copy the token"
+SAVED_BOT_TOKEN="$LAST_SECRET_VALUE"
 
 prompt_secret "CHAT_ID" \
     "Your Telegram chat ID (also acts as the security allowlist)" \
@@ -118,28 +121,22 @@ prompt_optional_secret "ALLOWED_ORIGIN" "Restrict form submissions to your guide
 # ── Register webhook ──────────────────────────────────────────────────────────
 
 echo -e "${BOLD}Step 3: Deploy${NC}"
-wrangler deploy
+DEPLOY_OUTPUT=$(wrangler deploy 2>&1)
+echo "$DEPLOY_OUTPUT"
 echo ""
 
-WORKER_URL=$(wrangler deploy --dry-run 2>&1 | grep "https://" | head -1 | awk '{print $NF}' || echo "")
+# Extract the deployed URL from wrangler's output (format: "https://invitarr.<account>.workers.dev")
+WORKER_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[a-zA-Z0-9._-]*workers\.dev' | head -1)
 
 echo -e "${BOLD}Step 4: Register Telegram Webhook${NC}"
-if [ -n "$WORKER_URL" ]; then
-    echo "Setting webhook to: ${WORKER_URL}/webhook"
-    curl -s "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url=${WORKER_URL}/webhook" | python3 -m json.tool 2>/dev/null || true
-else
-    echo -e "${YELLOW}⚠ Could not auto-detect worker URL.${NC}"
+if [ -z "$WORKER_URL" ]; then
+    echo -e "${YELLOW}⚠ Could not auto-detect worker URL from deploy output.${NC}"
     read -rp "Enter your deployed worker URL (e.g. https://invitarr.yourname.workers.dev): " WORKER_URL
-    echo "Registering webhook..."
-    BOT_TOKEN_VAL=$(cat ~/.wrangler/state/secrets/BOT_TOKEN 2>/dev/null || echo "")
-    if [ -n "$BOT_TOKEN_VAL" ]; then
-        curl -s "https://api.telegram.org/bot${BOT_TOKEN_VAL}/setWebhook?url=${WORKER_URL}/webhook"
-    else
-        echo ""
-        echo -e "${YELLOW}Register the webhook manually:${NC}"
-        echo "  curl 'https://api.telegram.org/bot<YOUR_BOT_TOKEN>/setWebhook?url=${WORKER_URL}/webhook'"
-    fi
 fi
+
+echo "Setting webhook to: ${WORKER_URL}/webhook"
+WEBHOOK_RES=$(curl -s "https://api.telegram.org/bot${SAVED_BOT_TOKEN}/setWebhook?url=${WORKER_URL}/webhook")
+echo "$WEBHOOK_RES" | python3 -m json.tool 2>/dev/null || echo "$WEBHOOK_RES"
 
 echo ""
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -150,6 +147,6 @@ echo "  Request form:  ${WORKER_URL}/"
 echo "  Webhook:       ${WORKER_URL}/webhook"
 echo "  Health check:  ${WORKER_URL}/health"
 echo ""
-echo "  Next: update your guide page to point to this worker URL."
-echo "  See: docs/setup.md"
+echo "  Next: set SITE_CONFIG.workerUrl = '${WORKER_URL}' in guide/index.html"
+echo "  See: ../guide/README.md for the guide page setup."
 echo ""
