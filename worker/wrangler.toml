@@ -1,0 +1,22 @@
+name = "invitarr"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "INVITARR_KV"
+id      = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# All sensitive values are set via: wrangler secret put <NAME>
+# See SECURITY.md and run setup.sh for guided configuration.
+#
+# Required secrets:
+#   BOT_TOKEN       — Telegram bot token
+#   CHAT_ID         — Your Telegram chat ID
+#   PLEX_TOKEN      — Your Plex auth token
+#   PLEX_SERVER_ID  — Your Plex machine identifier
+#   PLEX_LIBRARIES  — "Name:globalId,Name:globalId,..."
+#
+# Optional secrets:
+#   OWNER_NAME      — Your display name (shown on request form)
+#   SERVER_NAME     — Your server name (shown on request form)
+#   ALLOWED_ORIGIN  — Restrict CORS to your guide page domain
