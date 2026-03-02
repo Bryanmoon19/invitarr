@@ -4,7 +4,7 @@
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Email: [create a dedicated email for this] or open a [GitHub Security Advisory](https://github.com/YOUR_USERNAME/invitarr/security/advisories/new).
+Open a [GitHub Security Advisory](https://github.com/Bryanmoon19/invitarr/security/advisories/new) — it's private and goes directly to the maintainer.
 
 We will respond within 48 hours and aim to patch confirmed vulnerabilities within 7 days.
 
